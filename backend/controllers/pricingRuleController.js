@@ -1,15 +1,10 @@
 const PricingRule = require('../models/PricingRule');
+const { ApiError } = require('../middleware/errorHandler');
+const mongoose = require('mongoose');
 
-// Helper for 404
-const notFoundError = (message = 'Resource not found') => {
-  const err = new Error(message);
-  err.statusCode = 404;
-  throw err;
-};
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-// @desc    Get all pricing rules
-// @route   GET /api/pricing-rules
-// @access  Public
+// Get all pricing rules
 const getPricingRules = async (req, res, next) => {
   try {
     const filters = {};
@@ -17,144 +12,96 @@ const getPricingRules = async (req, res, next) => {
     if (req.query.type) filters.type = req.query.type;
 
     const rules = await PricingRule.find(filters).sort({ priority: -1 });
-
-    res.json({
-      success: true,
-      count: rules.length,
-      data: rules
-    });
+    res.json({ success: true, count: rules.length, data: rules });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get single pricing rule
-// @route   GET /api/pricing-rules/:id
-// @access  Public
+// Get single pricing rule
 const getPricingRule = async (req, res, next) => {
   try {
-    const rule = await PricingRule.findById(req.params.id);
-    if (!rule) notFoundError('Pricing rule not found');
+    const { id } = req.params;
+    if (!isValidId(id)) throw new ApiError('Invalid pricing rule ID', 400);
 
-    res.json({
-      success: true,
-      data: rule
-    });
+    const rule = await PricingRule.findById(id);
+    if (!rule) throw new ApiError('Pricing rule not found', 404);
+
+    res.json({ success: true, data: rule });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Create pricing rule
-// @route   POST /api/admin/pricing-rules
-// @access  Private/Admin
+// Create pricing rule
 const createPricingRule = async (req, res, next) => {
   try {
     const allowedFields = [
-      'name',
-      'description',
-      'type',
-      'startTime',
-      'endTime',
-      'applicableDays',
-      'specificDates',
-      'modifierType',
-      'modifierValue',
-      'appliesTo',
-      'priority',
-      'isActive'
+      'name','description','type','startTime','endTime','applicableDays',
+      'specificDates','modifierType','modifierValue','appliesTo','priority','isActive'
     ];
+    const data = {};
+    allowedFields.forEach(f => { if (req.body[f] !== undefined) data[f] = req.body[f]; });
 
-    const ruleData = {};
-    allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) ruleData[field] = req.body[field];
-    });
-
-    const rule = await PricingRule.create(ruleData);
-
-    res.status(201).json({
-      success: true,
-      data: rule
-    });
+    const rule = await PricingRule.create(data);
+    res.status(201).json({ success: true, data: rule });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Update pricing rule
-// @route   PUT /api/admin/pricing-rules/:id
-// @access  Private/Admin
+// Update pricing rule
 const updatePricingRule = async (req, res, next) => {
   try {
+    const { id } = req.params;
+    if (!isValidId(id)) throw new ApiError('Invalid pricing rule ID', 400);
+
     const allowedFields = [
-      'name',
-      'description',
-      'type',
-      'startTime',
-      'endTime',
-      'applicableDays',
-      'specificDates',
-      'modifierType',
-      'modifierValue',
-      'appliesTo',
-      'priority',
-      'isActive'
+      'name','description','type','startTime','endTime','applicableDays',
+      'specificDates','modifierType','modifierValue','appliesTo','priority','isActive'
     ];
-
     const updateData = {};
-    allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) updateData[field] = req.body[field];
-    });
+    allowedFields.forEach(f => { if (req.body[f] !== undefined) updateData[f] = req.body[f]; });
 
-    const rule = await PricingRule.findById(req.params.id);
-    if (!rule) notFoundError('Pricing rule not found');
+    const rule = await PricingRule.findById(id);
+    if (!rule) throw new ApiError('Pricing rule not found', 404);
 
     Object.assign(rule, updateData);
-    const updatedRule = await rule.save();
-
-    res.json({
-      success: true,
-      data: updatedRule
-    });
+    const updated = await rule.save();
+    res.json({ success: true, data: updated });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Delete pricing rule
-// @route   DELETE /api/admin/pricing-rules/:id
-// @access  Private/Admin
+// Delete pricing rule
 const deletePricingRule = async (req, res, next) => {
   try {
-    const rule = await PricingRule.findById(req.params.id);
-    if (!rule) notFoundError('Pricing rule not found');
+    const { id } = req.params;
+    if (!isValidId(id)) throw new ApiError('Invalid pricing rule ID', 400);
+
+    const rule = await PricingRule.findById(id);
+    if (!rule) throw new ApiError('Pricing rule not found', 404);
 
     await rule.deleteOne();
-
-    res.json({
-      success: true,
-      message: 'Pricing rule deleted successfully'
-    });
+    res.json({ success: true, message: 'Pricing rule deleted successfully' });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Toggle pricing rule active status
-// @route   PATCH /api/admin/pricing-rules/:id/toggle
-// @access  Private/Admin
+// Toggle active status
 const togglePricingRuleStatus = async (req, res, next) => {
   try {
-    const rule = await PricingRule.findById(req.params.id);
-    if (!rule) notFoundError('Pricing rule not found');
+    const { id } = req.params;
+    if (!isValidId(id)) throw new ApiError('Invalid pricing rule ID', 400);
+
+    const rule = await PricingRule.findById(id);
+    if (!rule) throw new ApiError('Pricing rule not found', 404);
 
     rule.isActive = !rule.isActive;
     await rule.save();
-
-    res.json({
-      success: true,
-      data: rule
-    });
+    res.json({ success: true, data: rule });
   } catch (error) {
     next(error);
   }
@@ -166,5 +113,5 @@ module.exports = {
   createPricingRule,
   updatePricingRule,
   deletePricingRule,
-  togglePricingRuleStatus
+  togglePricingRuleStatus,
 };

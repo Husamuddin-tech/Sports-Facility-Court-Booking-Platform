@@ -2,11 +2,12 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { ApiError } = require('../middleware/errorHandler');
+const mongoose = require('mongoose');
 
 // Generate JWT Token
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d'
+    expiresIn: '30d',
   });
 };
 
@@ -17,23 +18,20 @@ const registerUser = async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name?.trim() || !email?.trim() || !password) {
       throw new ApiError('Name, email & password are required', 400);
     }
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      throw new ApiError('User already exists', 400);
-    }
+    const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
+    if (existingUser) throw new ApiError('User already exists', 400);
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
       password: hashedPassword,
-      phone
+      phone: phone?.trim(),
     });
 
     res.status(201).json({
@@ -43,8 +41,8 @@ const registerUser = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id)
-      }
+        token: generateToken(user._id),
+      },
     });
   } catch (error) {
     next(error);
@@ -58,11 +56,9 @@ const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      throw new ApiError('Email and password are required', 400);
-    }
+    if (!email?.trim() || !password) throw new ApiError('Email and password are required', 400);
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) throw new ApiError('Invalid credentials', 401);
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -75,8 +71,8 @@ const loginUser = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id)
-      }
+        token: generateToken(user._id),
+      },
     });
   } catch (error) {
     next(error);
@@ -89,15 +85,9 @@ const loginUser = async (req, res, next) => {
 const getUserProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
+    if (!user) throw new ApiError('User not found', 404);
 
-    if (!user) {
-      throw new ApiError('User not found', 404);
-    }
-
-    res.json({
-      success: true,
-      data: user
-    });
+    res.json({ success: true, data: user });
   } catch (error) {
     next(error);
   }
@@ -111,13 +101,12 @@ const updateUserProfile = async (req, res, next) => {
     const user = await User.findById(req.user._id);
     if (!user) throw new ApiError('User not found', 404);
 
-    user.name = req.body.name || user.name;
-    user.email = req.body.email || user.email;
-    user.phone = req.body.phone || user.phone;
+    user.name = req.body.name?.trim() || user.name;
+    user.email = req.body.email?.trim().toLowerCase() || user.email;
+    user.phone = req.body.phone?.trim() || user.phone;
 
     if (req.body.password) {
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(req.body.password, salt);
+      user.password = await bcrypt.hash(req.body.password, 10);
     }
 
     const updatedUser = await user.save();
@@ -129,8 +118,8 @@ const updateUserProfile = async (req, res, next) => {
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.role,
-        token: generateToken(updatedUser._id)
-      }
+        token: generateToken(updatedUser._id),
+      },
     });
   } catch (error) {
     next(error);
@@ -141,5 +130,5 @@ module.exports = {
   registerUser,
   loginUser,
   getUserProfile,
-  updateUserProfile
+  updateUserProfile,
 };

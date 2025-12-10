@@ -1,10 +1,13 @@
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
+const dotenv = require('dotenv');
 const connectDB = require('../config/db');
 const { errorHandler, notFound } = require('../middleware/errorHandler');
-const morgan = require('morgan'); // Logging middleware
 
-// Route imports
+// Load environment variables
+dotenv.config();
+
 const authRoutes = require('../routes/authRoutes');
 const courtRoutes = require('../routes/courtRoutes');
 const coachRoutes = require('../routes/coachRoutes');
@@ -17,24 +20,16 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: '*', // Adjust in production to restrict domains
+  origin: process.env.CORS_ORIGIN || '*', // Set specific domains in production
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
-// Logging (only in development)
+// Logging (dev only)
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-
-// Connect to database before handling requests
-connectDB().then(() => {
-  console.log('MongoDB connected successfully');
-}).catch((error) => {
-  console.error('Database connection failed:', error.message);
-  process.exit(1); // Stop server if DB fails
-});
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -58,7 +53,22 @@ app.get('/', (req, res) => {
 // 404 handler
 app.use(notFound);
 
-// Centralized error handler
+// Error handler
 app.use(errorHandler);
+
+// Start server only after DB connection
+const PORT = process.env.PORT || 5000;
+
+connectDB()
+  .then(() => {
+    console.log('MongoDB connected successfully');
+    app.listen(PORT, () => {
+      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Database connection failed:', error.message);
+    process.exit(1);
+  });
 
 module.exports = app;

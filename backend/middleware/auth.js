@@ -1,78 +1,50 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models'); // auto-loader friendly
+const { ApiError } = require('./errorHandler');
 
-// Protect routes
+// ------------------ PROTECT ROUTES ------------------
 const protect = async (req, res, next) => {
   try {
     let token;
 
     // 1️⃣ Check Authorization header
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    if (req.headers.authorization?.startsWith('Bearer ')) {
       token = req.headers.authorization.split(' ')[1];
     }
 
-    // 2️⃣ (Optional) Check cookies
-    if (!token && req.cookies && req.cookies.token) {
+    // 2️⃣ Optional: Check cookies
+    if (!token && req.cookies?.token) {
       token = req.cookies.token;
     }
 
-    // 3️⃣ If no token found
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Not authorized. Token missing.'
-      });
-    }
+    if (!token) throw new ApiError('Not authorized. Token missing.', 401);
 
-    // 4️⃣ Verify token
+    // 3️⃣ Verify JWT
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded?.id) throw new ApiError('Invalid token.', 401);
 
-    if (!decoded?.id) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid token.'
-      });
-    }
-
-    // 5️⃣ Fetch user and attach to request
+    // 4️⃣ Fetch user
     const user = await User.findById(decoded.id).select('-password');
-
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'User no longer exists.'
-      });
-    }
+    if (!user) throw new ApiError('User no longer exists.', 401);
 
     req.user = user;
     next();
 
-  } catch (error) {
-    console.error('❌ Auth Error:', error.message);
+  } catch (err) {
+    console.error('❌ Auth Error:', err.message);
 
-    return res.status(401).json({
-      success: false,
-      message: 'Not authorized. Token verification failed.'
-    });
+    // JWT-specific errors
+    if (err.name === 'JsonWebTokenError') return next(new ApiError('Invalid token. Please login again.', 401));
+    if (err.name === 'TokenExpiredError') return next(new ApiError('Token expired. Please login again.', 401));
+
+    next(err); // forward other errors to main error handler
   }
 };
 
-// Admin-only routes
+// ------------------ ADMIN ONLY ------------------
 const admin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: 'Not authorized. User not found.'
-    });
-  }
-
-  if (req.user.role !== 'admin') {
-    return res.status(403).json({
-      success: false,
-      message: 'Access denied. Admins only.'
-    });
-  }
-
+  if (!req.user) return next(new ApiError('Not authorized. User not found.', 401));
+  if (req.user.role !== 'admin') return next(new ApiError('Access denied. Admins only.', 403));
   next();
 };
 

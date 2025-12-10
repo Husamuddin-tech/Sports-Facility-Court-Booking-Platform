@@ -1,151 +1,101 @@
 const Equipment = require('../models/Equipment');
+const { ApiError } = require('../middleware/errorHandler');
+const mongoose = require('mongoose');
 
-// Helper for 404
-const notFoundError = (message = 'Resource not found') => {
-  const err = new Error(message);
-  err.statusCode = 404;
-  throw err;
-};
+const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-// @desc    Get all equipment
-// @route   GET /api/equipment
-// @access  Public
+// Get all equipment
 const getEquipment = async (req, res, next) => {
   try {
     const filters = {};
     if (req.query.type) filters.type = req.query.type;
-    if (req.query.isActive !== undefined) {
-      filters.isActive = req.query.isActive === 'true';
-    }
+    if (req.query.isActive !== undefined) filters.isActive = req.query.isActive === 'true';
 
-    const equipmentList = await Equipment.find(filters);
-
-    res.json({
-      success: true,
-      count: equipmentList.length,
-      data: equipmentList
-    });
+    const items = await Equipment.find(filters);
+    res.json({ success: true, count: items.length, data: items });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get single equipment item
-// @route   GET /api/equipment/:id
-// @access  Public
+// Get single equipment
 const getEquipmentItem = async (req, res, next) => {
   try {
-    const equipment = await Equipment.findById(req.params.id);
-    if (!equipment) notFoundError('Equipment not found');
+    const { id } = req.params;
+    if (!isValidId(id)) throw new ApiError('Invalid equipment ID', 400);
 
-    res.json({
-      success: true,
-      data: equipment
-    });
+    const item = await Equipment.findById(id);
+    if (!item) throw new ApiError('Equipment not found', 404);
+
+    res.json({ success: true, data: item });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Create new equipment
-// @route   POST /api/admin/equipment
-// @access  Private/Admin
+// Create equipment
 const createEquipment = async (req, res, next) => {
   try {
-    const allowedFields = [
-      'name',
-      'type',
-      'description',
-      'totalQuantity',
-      'pricePerHour',
-      'image'
-    ];
+    const allowedFields = ['name','type','description','totalQuantity','pricePerHour','image'];
+    const data = {};
+    allowedFields.forEach(f => { if (req.body[f] !== undefined) data[f] = req.body[f]; });
 
-    const equipmentData = {};
-    allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) equipmentData[field] = req.body[field];
-    });
-
-    const equipment = await Equipment.create(equipmentData);
-
-    res.status(201).json({
-      success: true,
-      data: equipment
-    });
+    const item = await Equipment.create(data);
+    res.status(201).json({ success: true, data: item });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Update equipment
-// @route   PUT /api/admin/equipment/:id
-// @access  Private/Admin
+// Update equipment
 const updateEquipment = async (req, res, next) => {
   try {
-    const allowedFields = [
-      'name',
-      'type',
-      'description',
-      'totalQuantity',
-      'pricePerHour',
-      'image',
-      'isActive'
-    ];
+    const { id } = req.params;
+    if (!isValidId(id)) throw new ApiError('Invalid equipment ID', 400);
 
+    const allowedFields = ['name','type','description','totalQuantity','pricePerHour','image','isActive'];
     const updateData = {};
-    allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) updateData[field] = req.body[field];
-    });
+    allowedFields.forEach(f => { if (req.body[f] !== undefined) updateData[f] = req.body[f]; });
 
-    const equipment = await Equipment.findById(req.params.id);
-    if (!equipment) notFoundError('Equipment not found');
+    const item = await Equipment.findById(id);
+    if (!item) throw new ApiError('Equipment not found', 404);
 
-    Object.assign(equipment, updateData);
-    const updatedEquipment = await equipment.save();
-
-    res.json({
-      success: true,
-      data: updatedEquipment
-    });
+    Object.assign(item, updateData);
+    const updated = await item.save();
+    res.json({ success: true, data: updated });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Delete equipment
-// @route   DELETE /api/admin/equipment/:id
-// @access  Private/Admin
+// Delete equipment
 const deleteEquipment = async (req, res, next) => {
   try {
-    const equipment = await Equipment.findById(req.params.id);
-    if (!equipment) notFoundError('Equipment not found');
+    const { id } = req.params;
+    if (!isValidId(id)) throw new ApiError('Invalid equipment ID', 400);
 
-    await equipment.deleteOne();
+    const item = await Equipment.findById(id);
+    if (!item) throw new ApiError('Equipment not found', 404);
 
-    res.json({
-      success: true,
-      message: 'Equipment deleted successfully'
-    });
+    await item.deleteOne();
+    res.json({ success: true, message: 'Equipment deleted successfully' });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Toggle equipment active status
-// @route   PATCH /api/admin/equipment/:id/toggle
-// @access  Private/Admin
+// Toggle active status
 const toggleEquipmentStatus = async (req, res, next) => {
   try {
-    const equipment = await Equipment.findById(req.params.id);
-    if (!equipment) notFoundError('Equipment not found');
+    const { id } = req.params;
+    if (!isValidId(id)) throw new ApiError('Invalid equipment ID', 400);
 
-    equipment.isActive = !equipment.isActive;
-    await equipment.save();
+    const item = await Equipment.findById(id);
+    if (!item) throw new ApiError('Equipment not found', 404);
 
-    res.json({
-      success: true,
-      data: equipment
-    });
+    item.isActive = !item.isActive;
+    await item.save();
+    res.json({ success: true, data: item });
   } catch (error) {
     next(error);
   }
@@ -157,5 +107,5 @@ module.exports = {
   createEquipment,
   updateEquipment,
   deleteEquipment,
-  toggleEquipmentStatus
+  toggleEquipmentStatus,
 };

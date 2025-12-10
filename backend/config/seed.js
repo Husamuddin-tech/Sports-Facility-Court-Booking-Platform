@@ -9,9 +9,15 @@ const Coach = require('../models/Coach');
 const Equipment = require('../models/Equipment');
 const PricingRule = require('../models/PricingRule');
 
+// Production safeguard
+if (process.env.NODE_ENV === 'production') {
+  console.error("\x1b[31m❌ Seeding in production is disabled!\x1b[0m");
+  process.exit(1);
+}
+
 // Validate ENV
 if (!process.env.MONGODB_URI) {
-  console.error("\x1b[31m❌ ERROR: MONGODB_URI is missing in .env file\x1b[0m");
+  console.error("\x1b[31m❌ MONGODB_URI is missing in .env file\x1b[0m");
   process.exit(1);
 }
 
@@ -40,14 +46,9 @@ const seedData = async () => {
       Equipment.deleteMany({}),
       PricingRule.deleteMany({})
     ]);
-
     console.log("\x1b[32m✔ Collections Cleared\x1b[0m\n");
 
-    
     // Create Admin + User
-    
-    console.log("\x1b[36m👉 Creating Users...\x1b[0m");
-
     const salt = await bcrypt.genSalt(10);
 
     const adminUser = await User.create({
@@ -68,11 +69,7 @@ const seedData = async () => {
 
     console.log("\x1b[32m✔ Users Created\x1b[0m");
 
-    
     // Courts
-    
-    console.log("\n\x1b[36m👉 Seeding Courts...\x1b[0m");
-
     await Court.insertMany([
       {
         name: 'Indoor Court A',
@@ -107,14 +104,9 @@ const seedData = async () => {
         isActive: true
       }
     ]);
-
     console.log("\x1b[32m✔ Courts Created\x1b[0m");
 
-    
     // Coaches
-    
-    console.log("\n\x1b[36m👉 Adding Coaches...\x1b[0m");
-
     await Coach.insertMany([
       {
         name: 'Coach Michael Johnson',
@@ -147,14 +139,9 @@ const seedData = async () => {
         isActive: true
       }
     ]);
-
     console.log("\x1b[32m✔ Coaches Added\x1b[0m");
 
-    
     // Equipment
-    
-    console.log("\n\x1b[36m👉 Adding Equipment...\x1b[0m");
-
     await Equipment.insertMany([
       {
         name: 'Professional Racket',
@@ -189,14 +176,9 @@ const seedData = async () => {
         isActive: true
       }
     ]);
-
     console.log("\x1b[32m✔ Equipment Added\x1b[0m");
 
-    
     // Pricing Rules
-    
-    console.log("\n\x1b[36m👉 Adding Pricing Rules...\x1b[0m");
-
     await PricingRule.insertMany([
       {
         name: 'Peak Hour Surcharge',
@@ -255,24 +237,19 @@ const seedData = async () => {
         isActive: true
       }
     ]);
-
     console.log("\x1b[32m✔ Pricing Rules Added\x1b[0m\n");
 
-
     // Summary
-
     console.log("\x1b[35m===============================");
     console.log("        SEEDING SUMMARY        ");
     console.log("===============================\x1b[0m");
-
     console.log(`Users: ${await User.countDocuments()}`);
     console.log(`Courts: ${await Court.countDocuments()}`);
     console.log(`Coaches: ${await Coach.countDocuments()}`);
     console.log(`Equipment: ${await Equipment.countDocuments()}`);
     console.log(`Pricing Rules: ${await PricingRule.countDocuments()}`);
 
-    console.log("\n\x1b[32m✔ Seeding Completed Successfully!\x1b[0m\n");
-
+    console.log("\n\x1b[32m✔ Seeding Completed Successfully!\x1b[0m");
     console.log("\x1b[33m=== Test Credentials ===");
     console.log("Admin → admin@courtbooking.com  / admin123");
     console.log("User  → john@example.com        / user123\x1b[0m");
