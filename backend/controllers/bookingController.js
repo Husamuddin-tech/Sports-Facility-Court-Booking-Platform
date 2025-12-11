@@ -11,6 +11,100 @@ const { ApiError } = require('../middleware/errorHandler');
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // ==========================
+// CHECK AVAILABILITY
+// ==========================
+const checkAvailability = async (req, res, next) => {
+  try {
+    const { courtId, date, startTime, endTime } = req.body;
+    if (!isValidId(courtId)) throw new ApiError('Invalid court ID', 400);
+
+    // Set start and end of the day
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+
+    const overlapping = await Booking.find({
+      court: courtId,
+      date: { $gte: start, $lte: end },
+      startTime: { $lt: endTime },
+      endTime: { $gt: startTime },
+      status: { $in: ['confirmed', 'pending'] },
+    });
+
+    const isAvailable = overlapping.length === 0;
+    res.json({ success: true, isAvailable });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ==========================
+// GET AVAILABLE SLOTS
+// ==========================
+const getAvailableSlots = async (req, res, next) => {
+  try {
+    const { courtId, date, startTime, endTime } = req.params;
+    if (!isValidId(courtId)) throw new ApiError('Invalid court ID', 400);
+
+    // Set start and end of the day
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+
+    const bookings = await Booking.find({
+      court: courtId,
+      date: { $gte: start, $lte: end },
+      startTime: { $lt: endTime },
+      endTime: { $gt: startTime },
+      status: { $in: ['confirmed', 'pending'] },
+    });
+
+    res.json({ success: true, data: bookings });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ==========================
+// CALCULATE PRICE
+// ==========================
+const calculatePrice = async (req, res, next) => {
+  try {
+    const { courtId, coachId, equipment, date, startTime, endTime } = req.body;
+    const court = await Court.findById(courtId);
+    if (!court) throw new ApiError('Court not found', 404);
+
+    let coach = null;
+    if (coachId) coach = await Coach.findById(coachId);
+
+    const equipmentInventory = await Equipment.find({ isActive: true });
+    const equipmentDetails = (equipment || []).map((item) => {
+      const eq = equipmentInventory.find(
+        (e) => e._id.toString() === item.equipmentId
+      );
+      if (!eq)
+        throw new ApiError(`Equipment not found: ${item.equipmentId}`, 404);
+      return { equipment: eq, quantity: item.quantity };
+    });
+
+    const pricingBreakdown = await PricingEngine.calculatePrice({
+      court,
+      coach,
+      equipment: equipmentDetails,
+      date: new Date(date),
+      startTime,
+      endTime,
+    });
+
+    res.json({ success: true, data: pricingBreakdown });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ==========================
 // GET BOOKINGS
 // ==========================
 const getBookings = async (req, res, next) => {
@@ -59,7 +153,10 @@ const getBooking = async (req, res, next) => {
 
     if (!booking) throw new ApiError('Booking not found', 404);
 
-    if (booking.user._id.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (
+      booking.user._id.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
       throw new ApiError('Not authorized', 403);
     }
 
@@ -70,13 +167,34 @@ const getBooking = async (req, res, next) => {
 };
 
 // ==========================
+// JOIN WAITLIST
+// ==========================
+const joinWaitlist = async (req, res, next) => {
+  try {
+    const { bookingId } = req.body;
+    if (!isValidId(bookingId)) throw new ApiError('Invalid booking ID', 400);
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) throw new ApiError('Booking not found', 404);
+
+    booking.status = 'waitlist';
+    await booking.save();
+
+    res.json({ success: true, message: 'Joined waitlist', data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ==========================
 // CREATE BOOKING
 // ==========================
 const createBooking = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { courtId, coachId, equipment, date, startTime, endTime, notes } = req.body;
+    const { courtId, coachId, equipment, date, startTime, endTime, notes } =
+      req.body;
 
     if (!isValidId(courtId)) throw new ApiError('Invalid court ID', 400);
 
@@ -92,35 +210,58 @@ const createBooking = async (req, res, next) => {
 
     const equipmentInventory = await Equipment.find({ isActive: true });
     const availability = await AvailabilityChecker.checkAllAvailability({
-      courtId, coachId, equipment, equipmentInventory, date, startTime, endTime
+      courtId,
+      coachId,
+      equipment,
+      equipmentInventory,
+      date,
+      startTime,
+      endTime,
     });
 
-    if (!availability.available) throw new ApiError('Resources not available', 400);
+    if (!availability.available)
+      throw new ApiError('Resources not available', 400);
 
     const equipmentDetails = (equipment || []).map((item) => {
-      const eq = equipmentInventory.find(e => e._id.toString() === item.equipmentId);
-      if (!eq) throw new ApiError(`Equipment not found: ${item.equipmentId}`, 404);
+      const eq = equipmentInventory.find(
+        (e) => e._id.toString() === item.equipmentId
+      );
+      if (!eq)
+        throw new ApiError(`Equipment not found: ${item.equipmentId}`, 404);
       return { equipment: eq, quantity: item.quantity };
     });
 
     const pricingBreakdown = await PricingEngine.calculatePrice({
-      court, coach, equipment: equipmentDetails, date: new Date(date), startTime, endTime
-    });
-
-    const booking = await Booking.create([{
-      user: req.user._id,
-      court: courtId,
+      court,
+      coach,
+      equipment: equipmentDetails,
       date: new Date(date),
       startTime,
       endTime,
-      resources: {
-        equipment: (equipment || []).map(e => ({ item: e.equipmentId, quantity: e.quantity })),
-        coach: coachId || undefined
-      },
-      pricingBreakdown,
-      notes,
-      status: 'confirmed'
-    }], { session });
+    });
+
+    const booking = await Booking.create(
+      [
+        {
+          user: req.user._id,
+          court: courtId,
+          date: new Date(date),
+          startTime,
+          endTime,
+          resources: {
+            equipment: (equipment || []).map((e) => ({
+              item: e.equipmentId,
+              quantity: e.quantity,
+            })),
+            coach: coachId || undefined,
+          },
+          pricingBreakdown,
+          notes,
+          status: 'confirmed',
+        },
+      ],
+      { session }
+    );
 
     await session.commitTransaction();
     session.endSession();
@@ -150,11 +291,15 @@ const cancelBooking = async (req, res, next) => {
     const booking = await Booking.findById(id);
     if (!booking) throw new ApiError('Booking not found', 404);
 
-    if (booking.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+    if (
+      booking.user.toString() !== req.user._id.toString() &&
+      req.user.role !== 'admin'
+    ) {
       throw new ApiError('Not authorized', 403);
     }
 
-    if (booking.status === 'cancelled') throw new ApiError('Already cancelled', 400);
+    if (booking.status === 'cancelled')
+      throw new ApiError('Already cancelled', 400);
 
     booking.status = 'cancelled';
     await booking.save();
@@ -165,12 +310,16 @@ const cancelBooking = async (req, res, next) => {
   }
 };
 
-// Additional booking controllers (checkAvailability, joinWaitlist, getAvailableSlots, getMyBookings) 
+// Additional booking controllers (checkAvailability, joinWaitlist, getAvailableSlots, getMyBookings)
 // can be similarly enhanced.
 
 module.exports = {
+  checkAvailability,
+  getAvailableSlots,
+  calculatePrice,
   getBookings,
   getBooking,
+  joinWaitlist,
   createBooking,
   cancelBooking,
 };

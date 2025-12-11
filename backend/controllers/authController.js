@@ -25,12 +25,10 @@ const registerUser = async (req, res, next) => {
     const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
     if (existingUser) throw new ApiError('User already exists', 400);
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const user = await User.create({
       name: name.trim(),
       email: email.trim().toLowerCase(),
-      password: hashedPassword,
+      password,   // <-- plain text, model will hash
       phone: phone?.trim(),
     });
 
@@ -48,6 +46,7 @@ const registerUser = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // @desc    Login user
 // @route   POST /api/auth/login
@@ -106,7 +105,7 @@ const updateUserProfile = async (req, res, next) => {
     user.phone = req.body.phone?.trim() || user.phone;
 
     if (req.body.password) {
-      user.password = await bcrypt.hash(req.body.password, 10);
+      user.password = req.body.password;
     }
 
     const updatedUser = await user.save();

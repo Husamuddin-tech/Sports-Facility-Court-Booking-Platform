@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, 'Name is required'],
-      trim: true
+      trim: true,
     },
 
     email: {
@@ -20,14 +20,14 @@ const userSchema = new mongoose.Schema(
           /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@(([^<>()[\]\\.,;:\s@"]+\.)+[^<>()[\]\\.,;:\s@"]{2,})$/.test(
             v
           ),
-        message: 'Invalid email format'
-      }
+        message: 'Invalid email format',
+      },
     },
 
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: [6, 'Password must be at least 6 characters']
+      minlength: [6, 'Password must be at least 6 characters'],
     },
 
     phone: {
@@ -35,55 +35,55 @@ const userSchema = new mongoose.Schema(
       trim: true,
       validate: {
         validator: (v) => !v || /^[0-9+\-() ]{7,20}$/.test(v),
-        message: 'Invalid phone number'
-      }
+        message: 'Invalid phone number',
+      },
     },
 
     role: {
       type: String,
       enum: ['user', 'admin'],
-      default: 'user'
+      default: 'user',
     },
 
     isActive: {
       type: Boolean,
-      default: true
-    }
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
 /* ======================================================
-    🔐 PASSWORD HASHING
+    🔐 PASSWORD HASHING (Fixed Version — No next())
 ====================================================== */
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next(); // Only hash if new/updated
+userSchema.pre('save', async function () {
+  // Only hash if password is new or modified
+  if (!this.isModified('password')) return;
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-
-  next();
 });
 
+
 /* ======================================================
-    🔍 PASSWORD MATCHING (for login)
+    🔍 PASSWORD MATCHING (Login)
 ====================================================== */
 userSchema.methods.comparePassword = async function (enteredPassword) {
-  return bcrypt.compare(enteredPassword, this.password);
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 /* ======================================================
-    🧹 REMOVE PASSWORD IN API RESPONSES
+    🧹 REMOVE PASSWORD FROM API RESPONSES
 ====================================================== */
 userSchema.methods.toJSON = function () {
-  const user = this.toObject();
-  delete user.password;
-  return user;
+  const obj = this.toObject();
+  delete obj.password;
+  return obj;
 };
 
-/* ======================================================
-    ⚡ Indexes
-====================================================== */
-userSchema.index({ email: 1 });
+// /* ======================================================
+//     ⚡ Indexes
+// ====================================================== */
+// userSchema.index({ email: 1 });
 
 module.exports = mongoose.model('User', userSchema);
