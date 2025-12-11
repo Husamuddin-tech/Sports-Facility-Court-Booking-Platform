@@ -2,19 +2,19 @@
 
 
 .nav-link {
-  @apply text-graphite hover:text-mutedCharcoal px-3 py-2 rounded-md font-medium transition;
+  @apply text-[#4b4b4b] hover:text-[#423C3C] px-3 py-2 rounded-md font-medium transition;
 }
 
 .btn-outline {
-  @apply border border-mutedCharcoal text-graphite px-3 py-1 rounded-md font-medium hover:bg-mutedCharcoal/10 transition;
+  @apply border border-[#423C3C] text-[#4b4b4b] px-3 py-1 rounded-md font-medium hover:bg-[#423C3C]/10 transition;
 }
 
 .btn-primary {
-  @apply bg-graphite text-frostWhite px-3 py-1 rounded-md font-medium hover:bg-mutedCharcoal transition;
+  @apply bg-[#4b4b4b] text-[#F7FAFF] px-3 py-1 rounded-md font-medium hover:bg-[#423C3C] transition;
 }
 
 .mobile-link {
-  @apply flex items-center space-x-2 text-graphite hover:text-mutedCharcoal px-3 py-2 rounded-md transition;
+  @apply flex items-center space-x-2 text-[#4b4b4b] hover:text-[#423C3C] px-3 py-2 rounded-md transition;
 }
 
 @keyframes slide-down {
@@ -27,11 +27,11 @@
 }
 
 .footer-link {
-  @apply text-graphite hover:text-mutedCharcoal transition-colors duration-200;
+  @apply text-[#4b4b4b] hover:text-[#423C3C] transition-colors duration-200;
 }
 
 .social-icon {
-  @apply text-mutedCharcoal hover:text-graphite transition-colors duration-200;
+  @apply text-[#423C3C] hover:text-[#4b4b4b] transition-colors duration-200;
 }
 
 @keyframes spin-slow {

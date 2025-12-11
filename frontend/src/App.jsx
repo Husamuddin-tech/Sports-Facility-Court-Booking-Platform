@@ -50,7 +50,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div className="min-h-[60vh] flex flex-col items-center justify-center p-6">
           <div className="max-w-lg text-center">
-            <h2 className="text-2xl font-semibold text-graphite mb-2">Something went wrong</h2>
+            <h2 className="text-2xl font-semibold text-[#4b4b4b] mb-2">Something went wrong</h2>
             <p className="text-mutedCharcoal mb-4">
               An unexpected error occurred while loading this part of the app.
             </p>

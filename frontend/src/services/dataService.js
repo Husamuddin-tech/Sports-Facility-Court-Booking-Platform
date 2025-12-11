@@ -1,4 +1,3 @@
-// services/dataService.js
 import api from './api';
 import { toast } from 'react-hot-toast';
 
@@ -6,7 +5,8 @@ import { toast } from 'react-hot-toast';
 // Helper for catching errors
 // ----------------------------
 const handleError = (error) => {
-  const message = error?.response?.data?.error || error.message || 'Something went wrong';
+  const message =
+    error?.response?.data?.error || error.message || 'Something went wrong';
   toast.error(message);
   throw error;
 };
@@ -17,7 +17,7 @@ const handleError = (error) => {
 export const courtService = {
   getAll: async (params) => {
     try {
-      const res = await api.get('/courts', { params });
+      const res = await api.get('/api/courts', { params });
       return res.data;
     } catch (err) {
       handleError(err);
@@ -25,7 +25,7 @@ export const courtService = {
   },
   getById: async (id) => {
     try {
-      const res = await api.get(`/courts/${id}`);
+      const res = await api.get(`/api/courts/${id}`);
       return res.data;
     } catch (err) {
       handleError(err);
@@ -33,7 +33,7 @@ export const courtService = {
   },
   create: async (data) => {
     try {
-      const res = await api.post('/admin/courts', data);
+      const res = await api.post('/api/admin/courts', data);
       toast.success('Court created successfully');
       return res.data;
     } catch (err) {
@@ -42,7 +42,7 @@ export const courtService = {
   },
   update: async (id, data) => {
     try {
-      const res = await api.put(`/admin/courts/${id}`, data);
+      const res = await api.put(`/api/admin/courts/${id}`, data);
       toast.success('Court updated successfully');
       return res.data;
     } catch (err) {
@@ -51,7 +51,7 @@ export const courtService = {
   },
   delete: async (id) => {
     try {
-      const res = await api.delete(`/admin/courts/${id}`);
+      const res = await api.delete(`/api/admin/courts/${id}`);
       toast.success('Court deleted successfully');
       return res.data;
     } catch (err) {
@@ -60,7 +60,7 @@ export const courtService = {
   },
   toggle: async (id) => {
     try {
-      const res = await api.patch(`/admin/courts/${id}/toggle`);
+      const res = await api.patch(`/api/admin/courts/${id}/toggle`);
       toast.success('Court status updated');
       return res.data;
     } catch (err) {
@@ -75,7 +75,7 @@ export const courtService = {
 export const coachService = {
   getAll: async (params) => {
     try {
-      const res = await api.get('/coaches', { params });
+      const res = await api.get('/api/coaches', { params });
       return res.data;
     } catch (err) {
       handleError(err);
@@ -83,7 +83,7 @@ export const coachService = {
   },
   getById: async (id) => {
     try {
-      const res = await api.get(`/coaches/${id}`);
+      const res = await api.get(`/api/coaches/${id}`);
       return res.data;
     } catch (err) {
       handleError(err);
@@ -91,7 +91,7 @@ export const coachService = {
   },
   create: async (data) => {
     try {
-      const res = await api.post('/admin/coaches', data);
+      const res = await api.post('/api/admin/coaches', data);
       toast.success('Coach added successfully');
       return res.data;
     } catch (err) {
@@ -100,7 +100,7 @@ export const coachService = {
   },
   update: async (id, data) => {
     try {
-      const res = await api.put(`/admin/coaches/${id}`, data);
+      const res = await api.put(`/api/admin/coaches/${id}`, data);
       toast.success('Coach updated successfully');
       return res.data;
     } catch (err) {
@@ -109,7 +109,7 @@ export const coachService = {
   },
   delete: async (id) => {
     try {
-      const res = await api.delete(`/admin/coaches/${id}`);
+      const res = await api.delete(`/api/admin/coaches/${id}`);
       toast.success('Coach deleted successfully');
       return res.data;
     } catch (err) {
@@ -118,7 +118,7 @@ export const coachService = {
   },
   toggle: async (id) => {
     try {
-      const res = await api.patch(`/admin/coaches/${id}/toggle`);
+      const res = await api.patch(`/api/admin/coaches/${id}/toggle`);
       toast.success('Coach status updated');
       return res.data;
     } catch (err) {
@@ -127,7 +127,9 @@ export const coachService = {
   },
   updateAvailability: async (id, availability) => {
     try {
-      const res = await api.put(`/admin/coaches/${id}/availability`, { availability });
+      const res = await api.put(`/api/admin/coaches/${id}/availability`, {
+        availability,
+      });
       toast.success('Coach availability updated');
       return res.data;
     } catch (err) {
@@ -142,7 +144,7 @@ export const coachService = {
 export const equipmentService = {
   getAll: async (params) => {
     try {
-      const res = await api.get('/equipment', { params });
+      const res = await api.get('/api/equipment', { params });
       return res.data;
     } catch (err) {
       handleError(err);
@@ -150,7 +152,7 @@ export const equipmentService = {
   },
   getById: async (id) => {
     try {
-      const res = await api.get(`/equipment/${id}`);
+      const res = await api.get(`/api/equipment/${id}`);
       return res.data;
     } catch (err) {
       handleError(err);
@@ -158,7 +160,7 @@ export const equipmentService = {
   },
   create: async (data) => {
     try {
-      const res = await api.post('/admin/equipment', data);
+      const res = await api.post('/api/admin/equipment', data);
       toast.success('Equipment added successfully');
       return res.data;
     } catch (err) {
@@ -167,7 +169,7 @@ export const equipmentService = {
   },
   update: async (id, data) => {
     try {
-      const res = await api.put(`/admin/equipment/${id}`, data);
+      const res = await api.put(`/api/admin/equipment/${id}`, data);
       toast.success('Equipment updated successfully');
       return res.data;
     } catch (err) {
@@ -176,7 +178,7 @@ export const equipmentService = {
   },
   delete: async (id) => {
     try {
-      const res = await api.delete(`/admin/equipment/${id}`);
+      const res = await api.delete(`/api/admin/equipment/${id}`);
       toast.success('Equipment deleted successfully');
       return res.data;
     } catch (err) {
@@ -185,7 +187,7 @@ export const equipmentService = {
   },
   toggle: async (id) => {
     try {
-      const res = await api.patch(`/admin/equipment/${id}/toggle`);
+      const res = await api.patch(`/api/admin/equipment/${id}/toggle`);
       toast.success('Equipment status updated');
       return res.data;
     } catch (err) {
@@ -200,7 +202,7 @@ export const equipmentService = {
 export const pricingRuleService = {
   getAll: async (params) => {
     try {
-      const res = await api.get('/pricing-rules', { params });
+      const res = await api.get('/api/pricing-rules', { params });
       return res.data;
     } catch (err) {
       handleError(err);
@@ -208,7 +210,7 @@ export const pricingRuleService = {
   },
   getById: async (id) => {
     try {
-      const res = await api.get(`/pricing-rules/${id}`);
+      const res = await api.get(`/api/pricing-rules/${id}`);
       return res.data;
     } catch (err) {
       handleError(err);
@@ -216,7 +218,7 @@ export const pricingRuleService = {
   },
   create: async (data) => {
     try {
-      const res = await api.post('/admin/pricing-rules', data);
+      const res = await api.post('/api/admin/pricing-rules', data);
       toast.success('Pricing rule created');
       return res.data;
     } catch (err) {
@@ -225,7 +227,7 @@ export const pricingRuleService = {
   },
   update: async (id, data) => {
     try {
-      const res = await api.put(`/admin/pricing-rules/${id}`, data);
+      const res = await api.put(`/api/admin/pricing-rules/${id}`, data);
       toast.success('Pricing rule updated');
       return res.data;
     } catch (err) {
@@ -234,7 +236,7 @@ export const pricingRuleService = {
   },
   delete: async (id) => {
     try {
-      const res = await api.delete(`/admin/pricing-rules/${id}`);
+      const res = await api.delete(`/api/admin/pricing-rules/${id}`);
       toast.success('Pricing rule deleted');
       return res.data;
     } catch (err) {
@@ -243,7 +245,7 @@ export const pricingRuleService = {
   },
   toggle: async (id) => {
     try {
-      const res = await api.patch(`/admin/pricing-rules/${id}/toggle`);
+      const res = await api.patch(`/api/admin/pricing-rules/${id}/toggle`);
       toast.success('Pricing rule status updated');
       return res.data;
     } catch (err) {
@@ -258,7 +260,7 @@ export const pricingRuleService = {
 export const bookingService = {
   getAll: async (params) => {
     try {
-      const res = await api.get('/bookings', { params });
+      const res = await api.get('/api/bookings', { params });
       return res.data;
     } catch (err) {
       handleError(err);
@@ -266,7 +268,7 @@ export const bookingService = {
   },
   getById: async (id) => {
     try {
-      const res = await api.get(`/bookings/${id}`);
+      const res = await api.get(`/api/bookings/${id}`);
       return res.data;
     } catch (err) {
       handleError(err);
@@ -274,7 +276,7 @@ export const bookingService = {
   },
   getMyBookings: async (params) => {
     try {
-      const res = await api.get('/bookings/my-bookings', { params });
+      const res = await api.get('/api/bookings/my-bookings', { params });
       return res.data;
     } catch (err) {
       handleError(err);
@@ -282,7 +284,7 @@ export const bookingService = {
   },
   getAvailableSlots: async (courtId, date) => {
     try {
-      const res = await api.get(`/bookings/slots/${courtId}/${date}`);
+      const res = await api.get(`/api/bookings/slots/${courtId}/${date}`);
       return res.data;
     } catch (err) {
       handleError(err);
@@ -290,7 +292,7 @@ export const bookingService = {
   },
   checkAvailability: async (data) => {
     try {
-      const res = await api.post('/bookings/check-availability', data);
+      const res = await api.post('/api/bookings/check-availability', data);
       return res.data;
     } catch (err) {
       handleError(err);
@@ -298,7 +300,7 @@ export const bookingService = {
   },
   calculatePrice: async (data) => {
     try {
-      const res = await api.post('/bookings/calculate-price', data);
+      const res = await api.post('/api/bookings/calculate-price', data);
       return res.data;
     } catch (err) {
       handleError(err);
@@ -306,7 +308,7 @@ export const bookingService = {
   },
   create: async (data) => {
     try {
-      const res = await api.post('/bookings', data);
+      const res = await api.post('/api/bookings', data);
       toast.success('Booking successful');
       return res.data;
     } catch (err) {
@@ -315,7 +317,7 @@ export const bookingService = {
   },
   cancel: async (id) => {
     try {
-      const res = await api.patch(`/bookings/${id}/cancel`);
+      const res = await api.patch(`/api/bookings/${id}/cancel`);
       toast.success('Booking cancelled');
       return res.data;
     } catch (err) {
@@ -324,7 +326,7 @@ export const bookingService = {
   },
   joinWaitlist: async (data) => {
     try {
-      const res = await api.post('/bookings/waitlist', data);
+      const res = await api.post('/api/bookings/waitlist', data);
       toast.success('Added to waitlist');
       return res.data;
     } catch (err) {
