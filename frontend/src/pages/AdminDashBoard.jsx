@@ -10,7 +10,6 @@ import {
   FiPlus,
 } from 'react-icons/fi';
 import Loading from '../components/Loading';
-import AdminModal from '../components/AdminModal';
 import CourtsTable from '../components/admin-tables/CourtsTable';
 import CoachesTable from '../components/admin-tables/CoachesTable';
 import EquipmentTable from '../components/admin-tables/EquipmentTable';
