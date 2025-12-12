@@ -9,11 +9,11 @@ import Footer from './components/Footer';
 import './index.css';
 
 // Lazy-loaded pages for performance
-const HomePage = lazy(() => import('./pages/HomePage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
-const BookingPage = lazy(() => import('./pages/BookingPage'));
-const MyBookingsPage = lazy(() => import('./pages/MyBookingsPage'));
+const HomePage = lazy(() => import('./pages/HomePage.jsx'));
+const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage.jsx'));
+const BookingPage = lazy(() => import('./pages/BookingPage.jsx'));
+const MyBookingsPage = lazy(() => import('./pages/MyBookingsPage.jsx'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashBoard.jsx'));
 
 /* --------------------------
