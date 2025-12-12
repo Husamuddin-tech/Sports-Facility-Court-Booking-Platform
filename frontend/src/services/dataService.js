@@ -266,6 +266,7 @@ export const bookingService = {
       handleError(err);
     }
   },
+
   getById: async (id) => {
     try {
       const res = await api.get(`/api/bookings/${id}`);
@@ -274,6 +275,7 @@ export const bookingService = {
       handleError(err);
     }
   },
+
   getMyBookings: async (params) => {
     try {
       const res = await api.get('/api/bookings/my-bookings', { params });
@@ -282,6 +284,7 @@ export const bookingService = {
       handleError(err);
     }
   },
+
   getAvailableSlots: async (courtId, date) => {
     try {
       const res = await api.get(`/api/bookings/slots/${courtId}/${date}`);
@@ -290,6 +293,7 @@ export const bookingService = {
       handleError(err);
     }
   },
+
   checkAvailability: async (data) => {
     try {
       const res = await api.post('/api/bookings/check-availability', data);
@@ -298,6 +302,7 @@ export const bookingService = {
       handleError(err);
     }
   },
+
   calculatePrice: async (data) => {
     try {
       const res = await api.post('/api/bookings/calculate-price', data);
@@ -306,6 +311,7 @@ export const bookingService = {
       handleError(err);
     }
   },
+
   create: async (data) => {
     try {
       const res = await api.post('/api/bookings', data);
@@ -315,6 +321,7 @@ export const bookingService = {
       handleError(err);
     }
   },
+
   cancel: async (id) => {
     try {
       const res = await api.patch(`/api/bookings/${id}/cancel`);
@@ -324,6 +331,7 @@ export const bookingService = {
       handleError(err);
     }
   },
+
   joinWaitlist: async (data) => {
     try {
       const res = await api.post('/api/bookings/waitlist', data);
@@ -334,3 +342,4 @@ export const bookingService = {
     }
   },
 };
+

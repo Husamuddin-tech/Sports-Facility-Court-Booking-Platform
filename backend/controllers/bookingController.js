@@ -40,32 +40,57 @@ const checkAvailability = async (req, res, next) => {
 };
 
 // ==========================
-// GET AVAILABLE SLOTS
+// GET AVAILABLE SLOTS (FIXED)
 // ==========================
 const getAvailableSlots = async (req, res, next) => {
   try {
-    const { courtId, date, startTime, endTime } = req.params;
-    if (!isValidId(courtId)) throw new ApiError('Invalid court ID', 400);
+    const { courtId, date } = req.params;
 
-    // Set start and end of the day
-    const start = new Date(date);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(date);
-    end.setHours(23, 59, 59, 999);
+    if (!isValidId(courtId)) throw new ApiError("Invalid court ID", 400);
 
+    const selectedDate = new Date(date);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    const nextDay = new Date(selectedDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    // Get all bookings for the day
     const bookings = await Booking.find({
       court: courtId,
-      date: { $gte: start, $lte: end },
-      startTime: { $lt: endTime },
-      endTime: { $gt: startTime },
-      status: { $in: ['confirmed', 'pending'] },
+      date: { $gte: selectedDate, $lt: nextDay },
+      status: { $in: ["confirmed", "pending"] },
     });
 
-    res.json({ success: true, data: bookings });
-  } catch (err) {
-    next(err);
+    // Generate time slots (Example: 6 AM – 10 PM)
+    const startHour = 6;
+    const endHour = 22;
+
+    const slots = [];
+
+    for (let hour = startHour; hour < endHour; hour++) {
+      const startTime = `${hour.toString().padStart(2, "0")}:00`;
+      const endTime = `${(hour + 1).toString().padStart(2, "0")}:00`;
+
+      // Check if slot overlaps with any booking
+      const isBooked = bookings.some(
+        (b) =>
+          b.startTime < endTime &&
+          b.endTime > startTime
+      );
+
+      slots.push({
+        startTime,
+        endTime,
+        available: !isBooked,
+      });
+    }
+
+    res.json({ success: true, data: slots });
+  } catch (error) {
+    next(error);
   }
 };
+
 
 // ==========================
 // CALCULATE PRICE
