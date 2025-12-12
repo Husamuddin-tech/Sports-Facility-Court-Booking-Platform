@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
@@ -10,11 +9,12 @@ import {
   FiPlus,
 } from 'react-icons/fi';
 import Loading from '../components/Loading';
-import CourtsTable from '../components/admin-tables/CourtsTable';
-import CoachesTable from '../components/admin-tables/CoachesTable';
-import EquipmentTable from '../components/admin-tables/EquipmentTable';
-import PricingTable from '../components/admin-tables/PricingTable';
-import BookingsTable from '../components/admin-tables/BookingsTable';
+import CourtsTable from '../components/admin-tables/CourtsTable.jsx';
+import CoachesTable from '../components/admin-tables/CoachesTable.jsx';
+import EquipmentTable from '../components/admin-tables/EquipmentTable.jsx';
+import PricingTable from '../components/admin-tables/PricingTable.jsx';
+import BookingsTable from '../components/admin-tables/BookingsTable.jsx';
+import AdminModal from '../components/AdminModal.jsx'; // ✅ Added import
 import {
   courtService,
   coachService,
@@ -39,37 +39,40 @@ const AdminDashBoard = () => {
   ];
 
   const fetchData = useCallback(async () => {
-    // Get corresponding service
-    const getService = () => {
-      switch (activeTab) {
-        case 'courts':
-          return courtService;
-        case 'coaches':
-          return coachService;
-        case 'equipment':
-          return equipmentService;
-        case 'pricing':
-          return pricingRuleService;
-        case 'bookings':
-          return bookingService;
-        default:
-          return null;
-      }
-    };
-
     setLoading(true);
     try {
-      const service = getService();
+      let service;
+      switch (activeTab) {
+        case 'courts':
+          service = courtService;
+          break;
+        case 'coaches':
+          service = coachService;
+          break;
+        case 'equipment':
+          service = equipmentService;
+          break;
+        case 'pricing':
+          service = pricingRuleService;
+          break;
+        case 'bookings':
+          service = bookingService;
+          break;
+        default:
+          service = null;
+      }
+
       if (!service) return;
+
       const response = await service.getAll();
-      setData(response.data);
+      setData(response.data || []);
     } catch (error) {
       console.error(error);
       toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
-  }, [activeTab]); // activeTab is a dependency
+  }, [activeTab]);
 
   useEffect(() => {
     fetchData();
@@ -107,8 +110,16 @@ const AdminDashBoard = () => {
         return <CoachesTable {...tableProps} />;
       case 'equipment':
         return <EquipmentTable {...tableProps} />;
-      case 'pricing':
-        return <PricingTable {...tableProps} />;
+      case 'pricing': {
+        const pricingList = (data || []).map((p, index) => ({
+          bookingName: p.name || `Rule #${index + 1}`,
+          courtPrice: p.courtPrice || 0,
+          coachPrice: p.coachPrice || 0,
+          equipmentPrice: p.equipmentPrice || 0,
+          total: p.total || 0,
+        }));
+        return <PricingTable pricingList={pricingList} loading={loading} />;
+      }
       case 'bookings':
         return <BookingsTable {...tableProps} />;
       default:
