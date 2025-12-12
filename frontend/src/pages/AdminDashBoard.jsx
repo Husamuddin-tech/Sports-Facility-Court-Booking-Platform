@@ -1,4 +1,4 @@
-// pages/AdminDashboard.jsx
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import {
@@ -24,7 +24,7 @@ import {
   bookingService,
 } from '../services/dataService';
 
-const AdminDashboard = () => {
+const AdminDashBoard = () => {
   const [activeTab, setActiveTab] = useState('courts');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -177,4 +177,4 @@ const AdminDashboard = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminDashBoard;

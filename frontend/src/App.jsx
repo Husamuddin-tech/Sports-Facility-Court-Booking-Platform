@@ -14,7 +14,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/RegisterPage'));
 const BookingPage = lazy(() => import('./pages/BookingPage'));
 const MyBookingsPage = lazy(() => import('./pages/MyBookingsPage'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashBoard.jsx'));
 
 /* --------------------------
    Small themed spinner
